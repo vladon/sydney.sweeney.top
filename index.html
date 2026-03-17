@@ -6,6 +6,7 @@
     <meta name="description" content="A curated fan tribute to Sydney Sweeney — actress, producer, and cultural icon. Explore a premium editorial gallery celebrating her work and style.">
     <meta name="theme-color" content="#0a0a0b">
     <meta name="robots" content="index, follow">
+    <meta name="author" content="Sydney Sweeney Fan Gallery">
     
     <!-- SEO -->
     <title>Sydney Sweeney — Fan Gallery</title>
@@ -23,6 +24,7 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="Sydney Sweeney Fan Gallery">
+    <meta property="og:locale" content="en_US">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -35,6 +37,7 @@
     
     <!-- Preconnect for fonts (if using external fonts in future) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
@@ -47,11 +50,17 @@
         "name": "Sydney Sweeney Fan Gallery",
         "url": "https://sydney.sweeney.top/",
         "description": "A curated fan tribute to Sydney Sweeney — actress, producer, and cultural icon.",
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://sydney.sweeney.top/#gallery",
-            "query-input": "required name=search_term_string"
-        }
+        "genre": "Fan Site",
+        "inLanguage": "en-US"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ImageGallery",
+        "name": "Sydney Sweeney Photo Gallery",
+        "description": "Curated editorial photos of Sydney Sweeney",
+        "url": "https://sydney.sweeney.top/#gallery"
     }
     </script>
 </head>
@@ -159,7 +168,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="footer__container">
             <p class="footer__disclaimer">
                 This is an unofficial fan site and is not affiliated with Sydney Sweeney or her representatives.
@@ -172,7 +181,7 @@
 
     <!-- Lightbox -->
     <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" hidden>
-        <div class="lightbox__visually-hidden" id="lightbox-title">Image gallery lightbox</div>
+        <h2 id="lightbox-title" class="sr-only">Image gallery lightbox</h2>
         <button class="lightbox__close" aria-label="Close gallery" type="button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <line x1="18" y1="6" x2="6" y2="18"></line>

@@ -64,6 +64,7 @@
     /* Focus */
     --focus-outline: 2px solid var(--color-accent);
     --focus-outline-offset: 3px;
+    --focus-ring: 0 0 0 3px rgba(212, 165, 116, 0.4);
 }
 
 /* --------------------------------------------------------------------------
@@ -105,6 +106,7 @@ body {
     color: var(--color-text-primary);
     background-color: var(--color-bg-deep);
     overflow-x: hidden;
+    min-height: 100vh;
 }
 
 /* Typography */
@@ -147,6 +149,19 @@ ul, li {
 /* --------------------------------------------------------------------------
    Accessibility
    -------------------------------------------------------------------------- */
+/* Screen Reader Only - hides content visually but keeps it accessible */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* Skip Link */
 .skip-link {
     position: absolute;
@@ -160,11 +175,13 @@ ul, li {
     font-weight: 600;
     border-radius: 0 0 4px 4px;
     transition: top var(--duration-fast) var(--ease-out);
+    text-decoration: none;
 }
 
 .skip-link:focus {
     top: 0;
     outline: none;
+    box-shadow: var(--shadow-elevated);
 }
 
 /* Focus States */
@@ -175,12 +192,14 @@ ul, li {
 :focus-visible {
     outline: var(--focus-outline);
     outline-offset: var(--focus-outline-offset);
+    box-shadow: var(--focus-ring);
 }
 
 /* Fallback for browsers without :focus-visible */
 a:focus:not(:focus-visible),
 button:focus:not(:focus-visible) {
     outline: none;
+    box-shadow: none;
 }
 
 /* High contrast mode support */
@@ -188,25 +207,33 @@ button:focus:not(:focus-visible) {
     :root {
         --color-border: rgba(255, 255, 255, 0.3);
         --color-border-hover: rgba(255, 255, 255, 0.5);
+        --color-text-secondary: #c1c1c8;
+        --color-text-muted: #9b9ba3;
     }
     
     :focus-visible {
         outline: 3px solid var(--color-accent);
         outline-offset: 2px;
     }
+    
+    .about__card {
+        border-width: 2px;
+    }
 }
 
-/* Visually Hidden (for screen readers) */
-.lightbox__visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+/* Forced colors mode (Windows High Contrast) */
+@media (forced-colors: active) {
+    .hero__cta,
+    .about__card,
+    .lightbox__close,
+    .lightbox__prev,
+    .lightbox__next {
+        border: 2px solid currentColor;
+    }
+    
+    :focus-visible {
+        outline: 3px solid Highlight;
+    }
 }
 
 /* --------------------------------------------------------------------------
@@ -317,6 +344,7 @@ button:focus:not(:focus-visible) {
 .hero__cta:focus-visible {
     background: rgba(255, 255, 255, 0.1);
     border-color: var(--color-accent);
+    transform: translateY(-2px);
 }
 
 .hero__cta svg {
@@ -467,6 +495,7 @@ button:focus:not(:focus-visible) {
 
 .gallery__item:focus-visible {
     outline-offset: 4px;
+    z-index: 2;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -581,6 +610,11 @@ button:focus:not(:focus-visible) {
     visibility: visible;
 }
 
+/* Prevent body scroll when lightbox is open */
+.lightbox.active ~ * {
+    overflow: hidden;
+}
+
 .lightbox__close {
     position: absolute;
     top: var(--space-md);
@@ -674,6 +708,10 @@ button:focus:not(:focus-visible) {
         transform: none;
         transition: none;
     }
+    
+    .lightbox.active .lightbox__image {
+        transform: none;
+    }
 }
 
 .lightbox__counter {
@@ -750,6 +788,16 @@ button:focus:not(:focus-visible) {
     .gallery__item {
         opacity: 1;
         transform: none;
+        page-break-inside: avoid;
+    }
+    
+    body {
+        background: #fff;
+        color: #000;
+    }
+    
+    .about__card {
+        border: 1px solid #ccc;
         page-break-inside: avoid;
     }
 }

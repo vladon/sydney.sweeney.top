@@ -1,6 +1,9 @@
 /**
- * Sydney Sweeney Fan Gallery — Minimal JavaScript
+ * Sydney Sweeney Fan Gallery
  * Lightbox, keyboard navigation, and reveal animations
+ * 
+ * @version 1.0.0
+ * @license MIT
  */
 
 (function() {
@@ -9,6 +12,11 @@
     // --------------------------------------------------------------------------
     // Configuration
     // --------------------------------------------------------------------------
+    
+    /**
+     * Gallery images array - MUST be kept in sync with HTML .gallery__item elements
+     * @type {Array<{src: string, alt: string}>}
+     */
     const GALLERY_IMAGES = [
         { src: 'images/photo-01.jpg', alt: 'Sydney Sweeney portrait' },
         { src: 'images/photo-02.jpg', alt: 'Sydney Sweeney editorial' },
@@ -20,32 +28,88 @@
         { src: 'images/photo-08.jpg', alt: 'Sydney Sweeney red carpet' }
     ];
 
-    const LIGHTBOX_CLOSE_DELAY = 250; // Must match CSS transition duration
+    /** @type {number} Must match CSS transition duration for lightbox */
+    const LIGHTBOX_CLOSE_DELAY = 250;
+
+    /** @type {number} Touch swipe threshold in pixels */
+    const SWIPE_THRESHOLD = 50;
 
     // --------------------------------------------------------------------------
-    // DOM Elements
+    // DOM Elements (cached for performance)
     // --------------------------------------------------------------------------
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImage = document.getElementById('lightbox-image');
-    const lightboxCurrent = document.getElementById('lightbox-current');
-    const lightboxTotal = document.getElementById('lightbox-total');
-    const lightboxClose = document.querySelector('.lightbox__close');
-    const lightboxPrev = document.querySelector('.lightbox__prev');
-    const lightboxNext = document.querySelector('.lightbox__next');
-    const galleryItems = document.querySelectorAll('.gallery__item');
-    const yearSpan = document.getElementById('year');
+    
+    const dom = {
+        lightbox: document.getElementById('lightbox'),
+        lightboxImage: document.getElementById('lightbox-image'),
+        lightboxCurrent: document.getElementById('lightbox-current'),
+        lightboxTotal: document.getElementById('lightbox-total'),
+        lightboxClose: document.querySelector('.lightbox__close'),
+        lightboxPrev: document.querySelector('.lightbox__prev'),
+        lightboxNext: document.querySelector('.lightbox__next'),
+        galleryItems: document.querySelectorAll('.gallery__item'),
+        yearSpan: document.getElementById('year'),
+        heroCTA: document.querySelector('.hero__cta')
+    };
 
+    // --------------------------------------------------------------------------
     // State
-    let currentIndex = 0;
-    let isInLightbox = false;
-    let previousActiveElement = null;
-    let focusableElements = null;
+    // --------------------------------------------------------------------------
+    
+    const state = {
+        currentIndex: 0,
+        isInLightbox: false,
+        previousActiveElement: null,
+        focusableElements: null,
+        touchStartX: 0,
+        touchEndX: 0
+    };
+
+    // --------------------------------------------------------------------------
+    // Feature Detection
+    // --------------------------------------------------------------------------
+    
+    const features = {
+        reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        intersectionObserver: 'IntersectionObserver' in window,
+        smoothScroll: 'scrollBehavior' in document.documentElement.style,
+        touch: 'ontouchstart' in window
+    };
+
+    // --------------------------------------------------------------------------
+    // Initialization
+    // --------------------------------------------------------------------------
+    
+    /**
+     * Initialize all functionality
+     */
+    function init() {
+        setFooterYear();
+        setupGalleryItems();
+        setupLightboxControls();
+        setupKeyboardNavigation();
+        setupGalleryReveal();
+        setupSmoothScroll();
+        setupTouchSupport();
+    }
+
+    // Run initialization when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     // --------------------------------------------------------------------------
     // Footer Year
     // --------------------------------------------------------------------------
-    if (yearSpan) {
-        yearSpan.textContent = new Date().getFullYear();
+    
+    /**
+     * Set current year in footer copyright
+     */
+    function setFooterYear() {
+        if (dom.yearSpan) {
+            dom.yearSpan.textContent = new Date().getFullYear();
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -59,37 +123,50 @@
      */
     function getFocusableElements(container) {
         return container.querySelectorAll(
-            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            'button:not([disabled]), [href], input:not([disabled]), ' +
+            'select:not([disabled]), textarea:not([disabled]), ' +
+            '[tabindex]:not([tabindex="-1"])'
         );
     }
 
     /**
      * Trap focus within a container (for accessibility)
-     * @param {KeyboardEvent} e 
+     * @param {KeyboardEvent} event 
      */
-    function trapFocus(e) {
-        if (!isInLightbox || !focusableElements || focusableElements.length === 0) {
+    function trapFocus(event) {
+        if (!state.isInLightbox || !state.focusableElements || state.focusableElements.length === 0) {
             return;
         }
 
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
+        const firstElement = state.focusableElements[0];
+        const lastElement = state.focusableElements[state.focusableElements.length - 1];
 
-        if (e.key === 'Tab') {
-            if (e.shiftKey) {
+        if (event.key === 'Tab') {
+            if (event.shiftKey) {
                 // Shift + Tab: going backwards
                 if (document.activeElement === firstElement) {
-                    e.preventDefault();
+                    event.preventDefault();
                     lastElement.focus();
                 }
             } else {
                 // Tab: going forwards
                 if (document.activeElement === lastElement) {
-                    e.preventDefault();
+                    event.preventDefault();
                     firstElement.focus();
                 }
             }
         }
+    }
+
+    /**
+     * Clamp a number between min and max values
+     * @param {number} value 
+     * @param {number} min 
+     * @param {number} max 
+     * @returns {number}
+     */
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     // --------------------------------------------------------------------------
@@ -101,28 +178,31 @@
      * @param {number} index 
      */
     function openLightbox(index) {
-        if (!lightbox) return;
+        if (!dom.lightbox) return;
 
         // Store the element that triggered the lightbox
-        previousActiveElement = document.activeElement;
+        state.previousActiveElement = document.activeElement;
         
-        currentIndex = index;
+        state.currentIndex = clamp(index, 0, GALLERY_IMAGES.length - 1);
         updateLightboxImage();
-        lightbox.hidden = false;
+        dom.lightbox.hidden = false;
         
         // Force reflow for animation
-        void lightbox.offsetHeight;
-        lightbox.classList.add('active');
+        void dom.lightbox.offsetHeight;
+        dom.lightbox.classList.add('active');
         
-        isInLightbox = true;
+        state.isInLightbox = true;
         document.body.style.overflow = 'hidden';
         
         // Get focusable elements for focus trap
-        focusableElements = getFocusableElements(lightbox);
+        state.focusableElements = getFocusableElements(dom.lightbox);
+        
+        // Announce to screen readers
+        dom.lightbox.setAttribute('aria-hidden', 'false');
         
         // Focus management - focus close button
-        if (lightboxClose) {
-            lightboxClose.focus();
+        if (dom.lightboxClose) {
+            dom.lightboxClose.focus();
         }
     }
 
@@ -130,20 +210,23 @@
      * Close the lightbox
      */
     function closeLightbox() {
-        if (!lightbox) return;
+        if (!dom.lightbox) return;
 
-        lightbox.classList.remove('active');
+        dom.lightbox.classList.remove('active');
+        dom.lightbox.setAttribute('aria-hidden', 'true');
         
         setTimeout(() => {
-            lightbox.hidden = true;
-            isInLightbox = false;
+            dom.lightbox.hidden = true;
+            state.isInLightbox = false;
             document.body.style.overflow = '';
-            focusableElements = null;
+            state.focusableElements = null;
             
             // Return focus to the gallery item that opened the lightbox
-            if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-                previousActiveElement.focus();
+            if (state.previousActiveElement && typeof state.previousActiveElement.focus === 'function') {
+                state.previousActiveElement.focus();
             }
+            
+            state.previousActiveElement = null;
         }, LIGHTBOX_CLOSE_DELAY);
     }
 
@@ -151,22 +234,39 @@
      * Update the lightbox image and counter
      */
     function updateLightboxImage() {
-        if (!lightboxImage || !lightboxCurrent || !lightboxTotal) return;
+        if (!dom.lightboxImage || !dom.lightboxCurrent || !dom.lightboxTotal) return;
 
-        const image = GALLERY_IMAGES[currentIndex];
+        const image = GALLERY_IMAGES[state.currentIndex];
         if (!image) return;
 
-        lightboxImage.src = image.src;
-        lightboxImage.alt = image.alt;
-        lightboxCurrent.textContent = currentIndex + 1;
-        lightboxTotal.textContent = GALLERY_IMAGES.length;
+        // Update image source and alt text
+        dom.lightboxImage.src = image.src;
+        dom.lightboxImage.alt = image.alt;
+        
+        // Update counter display
+        dom.lightboxCurrent.textContent = state.currentIndex + 1;
+        dom.lightboxTotal.textContent = GALLERY_IMAGES.length;
+        
+        // Update button aria-labels with current position
+        if (dom.lightboxPrev) {
+            dom.lightboxPrev.setAttribute(
+                'aria-label',
+                `Previous image, currently showing ${state.currentIndex + 1} of ${GALLERY_IMAGES.length}`
+            );
+        }
+        if (dom.lightboxNext) {
+            dom.lightboxNext.setAttribute(
+                'aria-label',
+                `Next image, currently showing ${state.currentIndex + 1} of ${GALLERY_IMAGES.length}`
+            );
+        }
     }
 
     /**
      * Show the previous image
      */
     function showPrevious() {
-        currentIndex = (currentIndex - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length;
+        state.currentIndex = (state.currentIndex - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length;
         updateLightboxImage();
     }
 
@@ -174,91 +274,119 @@
      * Show the next image
      */
     function showNext() {
-        currentIndex = (currentIndex + 1) % GALLERY_IMAGES.length;
+        state.currentIndex = (state.currentIndex + 1) % GALLERY_IMAGES.length;
+        updateLightboxImage();
+    }
+
+    /**
+     * Go to a specific image by index
+     * @param {number} index 
+     */
+    function goToImage(index) {
+        state.currentIndex = clamp(index, 0, GALLERY_IMAGES.length - 1);
         updateLightboxImage();
     }
 
     // --------------------------------------------------------------------------
-    // Event Listeners — Lightbox
+    // Event Setup Functions
     // --------------------------------------------------------------------------
-    
-    galleryItems.forEach((item, index) => {
-        item.addEventListener('click', () => openLightbox(index));
-        
-        // Keyboard activation is already handled by button default behavior
-        // but we keep this for explicit Enter/Space handling
-        item.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openLightbox(index);
-            }
-        });
-    });
 
-    if (lightboxClose) {
-        lightboxClose.addEventListener('click', closeLightbox);
-    }
-
-    if (lightboxPrev) {
-        lightboxPrev.addEventListener('click', showPrevious);
-    }
-
-    if (lightboxNext) {
-        lightboxNext.addEventListener('click', showNext);
-    }
-
-    // Close on backdrop click
-    if (lightbox) {
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox || e.target.classList.contains('lightbox__content')) {
-                closeLightbox();
-            }
+    /**
+     * Setup gallery item click handlers
+     */
+    function setupGalleryItems() {
+        dom.galleryItems.forEach((item, index) => {
+            item.addEventListener('click', () => openLightbox(index));
+            
+            // Keyboard activation (Enter/Space) is handled natively by buttons
+            // but we add explicit handler for robustness
+            item.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openLightbox(index);
+                }
+            });
         });
     }
 
-    // --------------------------------------------------------------------------
-    // Keyboard Navigation
-    // --------------------------------------------------------------------------
-    document.addEventListener('keydown', (e) => {
-        // Focus trap for lightbox
-        if (isInLightbox) {
-            trapFocus(e);
+    /**
+     * Setup lightbox control buttons
+     */
+    function setupLightboxControls() {
+        if (dom.lightboxClose) {
+            dom.lightboxClose.addEventListener('click', closeLightbox);
         }
 
-        if (!isInLightbox) return;
-
-        switch (e.key) {
-            case 'Escape':
-                closeLightbox();
-                break;
-            case 'ArrowLeft':
-                showPrevious();
-                break;
-            case 'ArrowRight':
-                showNext();
-                break;
-            case 'Home':
-                currentIndex = 0;
-                updateLightboxImage();
-                break;
-            case 'End':
-                currentIndex = GALLERY_IMAGES.length - 1;
-                updateLightboxImage();
-                break;
+        if (dom.lightboxPrev) {
+            dom.lightboxPrev.addEventListener('click', showPrevious);
         }
-    });
 
-    // --------------------------------------------------------------------------
-    // Gallery Reveal Animation (IntersectionObserver)
-    // --------------------------------------------------------------------------
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (dom.lightboxNext) {
+            dom.lightboxNext.addEventListener('click', showNext);
+        }
 
-    if (!prefersReducedMotion && 'IntersectionObserver' in window) {
+        // Close on backdrop click
+        if (dom.lightbox) {
+            dom.lightbox.addEventListener('click', (e) => {
+                if (e.target === dom.lightbox || e.target.classList.contains('lightbox__content')) {
+                    closeLightbox();
+                }
+            });
+            
+            // Set initial aria state
+            dom.lightbox.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    /**
+     * Setup keyboard navigation for lightbox
+     */
+    function setupKeyboardNavigation() {
+        document.addEventListener('keydown', (e) => {
+            // Focus trap for lightbox
+            if (state.isInLightbox) {
+                trapFocus(e);
+            }
+
+            if (!state.isInLightbox) return;
+
+            switch (e.key) {
+                case 'Escape':
+                    closeLightbox();
+                    break;
+                case 'ArrowLeft':
+                    showPrevious();
+                    break;
+                case 'ArrowRight':
+                    showNext();
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    goToImage(0);
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    goToImage(GALLERY_IMAGES.length - 1);
+                    break;
+            }
+        });
+    }
+
+    /**
+     * Setup gallery reveal animation using IntersectionObserver
+     */
+    function setupGalleryReveal() {
+        if (features.reducedMotion || !features.intersectionObserver) {
+            // Fallback: show all items immediately (no animation)
+            dom.galleryItems.forEach(item => item.classList.add('revealed'));
+            return;
+        }
+
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     // Stagger the reveal based on item index
-                    const itemIndex = Array.from(galleryItems).indexOf(entry.target);
+                    const itemIndex = Array.from(dom.galleryItems).indexOf(entry.target);
                     const delay = itemIndex * 100;
                     
                     setTimeout(() => {
@@ -273,65 +401,73 @@
             rootMargin: '50px 0px'
         });
 
-        galleryItems.forEach(item => {
-            revealObserver.observe(item);
-        });
-    } else {
-        // Fallback: show all items immediately (no animation)
-        galleryItems.forEach(item => {
-            item.classList.add('revealed');
+        dom.galleryItems.forEach(item => revealObserver.observe(item));
+    }
+
+    /**
+     * Setup smooth scroll for CTA button (fallback for older browsers)
+     */
+    function setupSmoothScroll() {
+        if (!dom.heroCTA || features.smoothScroll) return;
+
+        dom.heroCTA.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = dom.heroCTA.getAttribute('href');
+            const target = targetId ? document.querySelector(targetId) : null;
+            
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
         });
     }
 
-    // --------------------------------------------------------------------------
-    // Smooth Scroll for CTA (fallback for browsers without CSS smooth scroll)
-    // --------------------------------------------------------------------------
-    const heroCTA = document.querySelector('.hero__cta');
-    
-    if (heroCTA) {
-        const supportsSmoothScroll = 'scrollBehavior' in document.documentElement.style;
-        
-        if (!supportsSmoothScroll) {
-            heroCTA.addEventListener('click', (e) => {
-                e.preventDefault();
-                const targetId = heroCTA.getAttribute('href');
-                const target = targetId ? document.querySelector(targetId) : null;
-                
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                }
-            });
-        }
-    }
+    /**
+     * Setup touch/swipe support for lightbox navigation
+     */
+    function setupTouchSupport() {
+        if (!dom.lightbox || !features.touch) return;
 
-    // --------------------------------------------------------------------------
-    // Touch/Swipe Support for Lightbox (basic)
-    // --------------------------------------------------------------------------
-    if (lightbox && 'ontouchstart' in window) {
-        let touchStartX = 0;
-        let touchEndX = 0;
-        const swipeThreshold = 50;
-
-        lightbox.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
+        dom.lightbox.addEventListener('touchstart', (e) => {
+            state.touchStartX = e.changedTouches[0].screenX;
         }, { passive: true });
 
-        lightbox.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
+        dom.lightbox.addEventListener('touchend', (e) => {
+            state.touchEndX = e.changedTouches[0].screenX;
             handleSwipe();
         }, { passive: true });
+    }
 
-        function handleSwipe() {
-            const swipeDistance = touchEndX - touchStartX;
-            
-            if (Math.abs(swipeDistance) > swipeThreshold) {
-                if (swipeDistance > 0) {
-                    showPrevious();
-                } else {
-                    showNext();
-                }
+    /**
+     * Handle touch swipe gesture
+     */
+    function handleSwipe() {
+        const swipeDistance = state.touchEndX - state.touchStartX;
+        
+        if (Math.abs(swipeDistance) > SWIPE_THRESHOLD) {
+            if (swipeDistance > 0) {
+                showPrevious();
+            } else {
+                showNext();
             }
         }
     }
+
+    // --------------------------------------------------------------------------
+    // Listen for reduced motion preference changes
+    // --------------------------------------------------------------------------
+    
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    
+    motionQuery.addEventListener('change', (e) => {
+        features.reducedMotion = e.matches;
+        
+        // If user enables reduced motion, immediately show all gallery items
+        if (e.matches) {
+            dom.galleryItems.forEach(item => {
+                item.style.opacity = '1';
+                item.style.transform = 'none';
+            });
+        }
+    });
 
 })();
