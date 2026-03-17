@@ -610,10 +610,7 @@ button:focus:not(:focus-visible) {
     visibility: visible;
 }
 
-/* Prevent body scroll when lightbox is open */
-.lightbox.active ~ * {
-    overflow: hidden;
-}
+/* Body scroll is locked via JavaScript (document.body.style.overflow) */
 
 .lightbox__close {
     position: absolute;
