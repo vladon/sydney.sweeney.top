@@ -42,8 +42,9 @@
     <meta name="twitter:image" content="https://sydney.sweeney.top/images/og-image.jpg">
     <meta name="twitter:image:alt" content="Sydney Sweeney Fan Gallery preview image">
     
-    <!-- Preload critical assets -->
-    <link rel="preload" href="images/hero.jpg" as="image" fetchpriority="high">
+    <!-- Preload critical assets - mobile-first responsive hero -->
+    <link rel="preload" href="images/medium/hero.webp" as="image" type="image/webp" fetchpriority="high" media="(max-width: 768px)">
+    <link rel="preload" href="images/large/hero.webp" as="image" type="image/webp" fetchpriority="high" media="(min-width: 769px)">
     
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
@@ -122,49 +123,73 @@
                 <ul class="gallery__grid" role="list">
                     <li>
                         <button class="gallery__item" data-index="0" aria-label="View photo 1 of 8: Sydney Sweeney portrait" type="button">
-                            <img src="images/photo-01.jpg" alt="Sydney Sweeney portrait" loading="eager" decoding="async" width="400" height="600">
+                            <picture>
+                                <source type="image/webp" srcset="images/thumbs/photo-01.webp 400w, images/medium/photo-01.webp 800w" sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw">
+                                <img src="images/photo-01.jpg" alt="Sydney Sweeney portrait" loading="eager" decoding="async" width="400" height="600">
+                            </picture>
                             <div class="gallery__item-overlay" aria-hidden="true"></div>
                         </button>
                     </li>
                     <li>
                         <button class="gallery__item" data-index="1" aria-label="View photo 2 of 8: Sydney Sweeney editorial" type="button">
-                            <img src="images/photo-02.jpg" alt="Sydney Sweeney editorial" loading="eager" decoding="async" width="400" height="600">
+                            <picture>
+                                <source type="image/webp" srcset="images/thumbs/photo-02.webp 400w, images/medium/photo-02.webp 800w" sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw">
+                                <img src="images/photo-02.jpg" alt="Sydney Sweeney editorial" loading="eager" decoding="async" width="400" height="600">
+                            </picture>
                             <div class="gallery__item-overlay" aria-hidden="true"></div>
                         </button>
                     </li>
                     <li>
                         <button class="gallery__item" data-index="2" aria-label="View photo 3 of 8: Sydney Sweeney portrait session" type="button">
-                            <img src="images/photo-03.jpg" alt="Sydney Sweeney portrait session" loading="lazy" decoding="async" width="400" height="600">
+                            <picture>
+                                <source type="image/webp" srcset="images/thumbs/photo-03.webp 400w, images/medium/photo-03.webp 800w" sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw">
+                                <img src="images/photo-03.jpg" alt="Sydney Sweeney portrait session" loading="lazy" decoding="async" width="400" height="600">
+                            </picture>
                             <div class="gallery__item-overlay" aria-hidden="true"></div>
                         </button>
                     </li>
                     <li>
                         <button class="gallery__item" data-index="3" aria-label="View photo 4 of 8: Sydney Sweeney photoshoot" type="button">
-                            <img src="images/photo-04.jpg" alt="Sydney Sweeney photoshoot" loading="lazy" decoding="async" width="400" height="600">
+                            <picture>
+                                <source type="image/webp" srcset="images/thumbs/photo-04.webp 400w, images/medium/photo-04.webp 800w" sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw">
+                                <img src="images/photo-04.jpg" alt="Sydney Sweeney photoshoot" loading="lazy" decoding="async" width="400" height="600">
+                            </picture>
                             <div class="gallery__item-overlay" aria-hidden="true"></div>
                         </button>
                     </li>
                     <li>
                         <button class="gallery__item" data-index="4" aria-label="View photo 5 of 8: Sydney Sweeney fashion editorial" type="button">
-                            <img src="images/photo-05.jpg" alt="Sydney Sweeney fashion editorial" loading="lazy" decoding="async" width="400" height="600">
+                            <picture>
+                                <source type="image/webp" srcset="images/thumbs/photo-05.webp 400w, images/medium/photo-05.webp 800w" sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw">
+                                <img src="images/photo-05.jpg" alt="Sydney Sweeney fashion editorial" loading="lazy" decoding="async" width="400" height="600">
+                            </picture>
                             <div class="gallery__item-overlay" aria-hidden="true"></div>
                         </button>
                     </li>
                     <li>
                         <button class="gallery__item" data-index="5" aria-label="View photo 6 of 8: Sydney Sweeney studio portrait" type="button">
-                            <img src="images/photo-06.jpg" alt="Sydney Sweeney studio portrait" loading="lazy" decoding="async" width="400" height="600">
+                            <picture>
+                                <source type="image/webp" srcset="images/thumbs/photo-06.webp 400w, images/medium/photo-06.webp 800w" sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw">
+                                <img src="images/photo-06.jpg" alt="Sydney Sweeney studio portrait" loading="lazy" decoding="async" width="400" height="600">
+                            </picture>
                             <div class="gallery__item-overlay" aria-hidden="true"></div>
                         </button>
                     </li>
                     <li>
                         <button class="gallery__item" data-index="6" aria-label="View photo 7 of 8: Sydney Sweeney magazine cover" type="button">
-                            <img src="images/photo-07.jpg" alt="Sydney Sweeney magazine cover" loading="lazy" decoding="async" width="400" height="600">
+                            <picture>
+                                <source type="image/webp" srcset="images/thumbs/photo-07.webp 400w, images/medium/photo-07.webp 800w" sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw">
+                                <img src="images/photo-07.jpg" alt="Sydney Sweeney magazine cover" loading="lazy" decoding="async" width="400" height="600">
+                            </picture>
                             <div class="gallery__item-overlay" aria-hidden="true"></div>
                         </button>
                     </li>
                     <li>
                         <button class="gallery__item" data-index="7" aria-label="View photo 8 of 8: Sydney Sweeney red carpet" type="button">
-                            <img src="images/photo-08.jpg" alt="Sydney Sweeney red carpet" loading="lazy" decoding="async" width="400" height="600">
+                            <picture>
+                                <source type="image/webp" srcset="images/thumbs/photo-08.webp 400w, images/medium/photo-08.webp 800w" sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw">
+                                <img src="images/photo-08.jpg" alt="Sydney Sweeney red carpet" loading="lazy" decoding="async" width="400" height="600">
+                            </picture>
                             <div class="gallery__item-overlay" aria-hidden="true"></div>
                         </button>
                     </li>

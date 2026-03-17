@@ -15,17 +15,50 @@
     
     /**
      * Gallery images array - MUST be kept in sync with HTML .gallery__item elements
-     * @type {Array<{src: string, alt: string}>}
+     * Supports responsive images with WebP and JPEG fallbacks
+     * @type {Array<{src: string, alt: string, webp: {medium: string, large: string}}>}
      */
     const GALLERY_IMAGES = [
-        { src: 'images/photo-01.jpg', alt: 'Sydney Sweeney portrait' },
-        { src: 'images/photo-02.jpg', alt: 'Sydney Sweeney editorial' },
-        { src: 'images/photo-03.jpg', alt: 'Sydney Sweeney portrait session' },
-        { src: 'images/photo-04.jpg', alt: 'Sydney Sweeney photoshoot' },
-        { src: 'images/photo-05.jpg', alt: 'Sydney Sweeney fashion editorial' },
-        { src: 'images/photo-06.jpg', alt: 'Sydney Sweeney studio portrait' },
-        { src: 'images/photo-07.jpg', alt: 'Sydney Sweeney magazine cover' },
-        { src: 'images/photo-08.jpg', alt: 'Sydney Sweeney red carpet' }
+        {
+            src: 'images/photo-01.jpg',
+            alt: 'Sydney Sweeney portrait',
+            webp: { medium: 'images/medium/photo-01.webp', large: 'images/large/photo-01.webp' }
+        },
+        {
+            src: 'images/photo-02.jpg',
+            alt: 'Sydney Sweeney editorial',
+            webp: { medium: 'images/medium/photo-02.webp', large: 'images/large/photo-02.webp' }
+        },
+        {
+            src: 'images/photo-03.jpg',
+            alt: 'Sydney Sweeney portrait session',
+            webp: { medium: 'images/medium/photo-03.webp', large: 'images/large/photo-03.webp' }
+        },
+        {
+            src: 'images/photo-04.jpg',
+            alt: 'Sydney Sweeney photoshoot',
+            webp: { medium: 'images/medium/photo-04.webp', large: 'images/large/photo-04.webp' }
+        },
+        {
+            src: 'images/photo-05.jpg',
+            alt: 'Sydney Sweeney fashion editorial',
+            webp: { medium: 'images/medium/photo-05.webp', large: 'images/large/photo-05.webp' }
+        },
+        {
+            src: 'images/photo-06.jpg',
+            alt: 'Sydney Sweeney studio portrait',
+            webp: { medium: 'images/medium/photo-06.webp', large: 'images/large/photo-06.webp' }
+        },
+        {
+            src: 'images/photo-07.jpg',
+            alt: 'Sydney Sweeney magazine cover',
+            webp: { medium: 'images/medium/photo-07.webp', large: 'images/large/photo-07.webp' }
+        },
+        {
+            src: 'images/photo-08.jpg',
+            alt: 'Sydney Sweeney red carpet',
+            webp: { medium: 'images/medium/photo-08.webp', large: 'images/large/photo-08.webp' }
+        }
     ];
 
     /** @type {number} Must match CSS transition duration for lightbox */
@@ -272,6 +305,28 @@
     }
 
     /**
+     * Get the appropriate image source based on viewport width and WebP support
+     * @param {Object} image - Image object from GALLERY_IMAGES
+     * @returns {string} - Best image source for current conditions
+     */
+    function getResponsiveImageSrc(image) {
+        const viewportWidth = window.innerWidth;
+        const supportsWebP = document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0;
+        
+        // Use WebP if supported and available
+        if (supportsWebP && image.webp) {
+            if (viewportWidth <= 768) {
+                return image.webp.medium; // 800px for mobile
+            } else {
+                return image.webp.large; // 1200px for desktop
+            }
+        }
+        
+        // Fallback to original JPEG
+        return image.src;
+    }
+
+    /**
      * Update the lightbox image and counter
      */
     function updateLightboxImage() {
@@ -291,16 +346,19 @@
         // Hide error state when loading new image
         hideImageError();
         
+        // Get responsive image source
+        const responsiveSrc = getResponsiveImageSrc(image);
+        
         // Preload image with error handling
         const tempImg = new Image();
-        tempImg.src = image.src;
+        tempImg.src = responsiveSrc;
         
         tempImg.onload = () => {
             // Check if aborted
             if (state.imageLoadController && state.imageLoadController.signal.aborted) {
                 return;
             }
-            dom.lightboxImage.src = image.src;
+            dom.lightboxImage.src = responsiveSrc;
             dom.lightboxImage.alt = image.alt;
         };
         
@@ -309,7 +367,13 @@
             if (state.imageLoadController && state.imageLoadController.signal.aborted) {
                 return;
             }
-            showImageError();
+            // Fallback to original JPEG if WebP fails
+            if (responsiveSrc !== image.src) {
+                dom.lightboxImage.src = image.src;
+                dom.lightboxImage.alt = image.alt;
+            } else {
+                showImageError();
+            }
         };
         
         // Update counter display

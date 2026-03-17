@@ -7,14 +7,25 @@ Static fan gallery website — pure HTML5, CSS3, vanilla JS. No build step, no f
 
 ## Critical Synchronization Points
 - **Gallery images are defined in TWO places** — must keep in sync:
-  1. HTML: `.gallery__item` buttons in `index.html` (lines 83-114)
-  2. JS: `GALLERY_IMAGES` array in [`script.js`](script.js:12)
+  1. HTML: `.gallery__item` buttons in `index.html` (lines 122-171)
+  2. JS: `GALLERY_IMAGES` array in [`script.js`](script.js:20)
+
+## Responsive Image Structure
+Images are served in multiple sizes for mobile optimization:
+- `/images/photo-XX.jpg` — Original full-size JPEG (fallback)
+- `/images/thumbs/photo-XX.webp` — 400px wide thumbnails (~20KB each)
+- `/images/medium/photo-XX.webp` — 800px wide for mobile lightbox (~60KB each)
+- `/images/large/photo-XX.webp` — 1200px wide for desktop (~110KB each)
 
 ## Adding Gallery Images
 1. Add image to `/images/` directory (naming: `photo-XX.jpg`)
-2. Add `<button class="gallery__item">` in HTML with `data-index` attribute (0-based)
-3. Add corresponding entry to `GALLERY_IMAGES` array in script.js
-4. Update `data-index` values if inserting mid-sequence
+2. Generate responsive versions using sharp or similar tool:
+   - Thumbnail: 400px wide, WebP, 80% quality
+   - Medium: 800px wide, WebP, 85% quality
+   - Large: 1200px wide, WebP, 85% quality
+3. Add `<button class="gallery__item">` with `<picture>` element in HTML
+4. Add corresponding entry to `GALLERY_IMAGES` array in script.js (include webp paths)
+5. Update `data-index` values if inserting mid-sequence
 
 ## Lightbox Implementation
 - Uses `hidden` attribute + `.active` class pattern (not `display:none`)

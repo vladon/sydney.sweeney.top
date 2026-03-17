@@ -266,7 +266,14 @@ button:focus:not(:focus-visible) {
 .hero__backdrop {
     position: absolute;
     inset: 0;
+    /* Fallback for older browsers */
     background-image: url('images/hero.jpg');
+    /* Modern browsers: WebP with responsive sizes */
+    background-image: image-set(
+        'images/medium/hero.webp' type('image/webp') 1x,
+        'images/large/hero.webp' type('image/webp') 2x,
+        'images/hero.jpg' 1x
+    );
     background-size: cover;
     background-position: center 20%;
     background-repeat: no-repeat;
@@ -274,6 +281,17 @@ button:focus:not(:focus-visible) {
     transform: scale(1.05);
     transition: transform 8s var(--ease-out);
     will-change: transform;
+}
+
+/* Mobile: use smaller hero image */
+@media (max-width: 768px) {
+    .hero__backdrop {
+        background-image: url('images/medium/hero.webp');
+        background-image: image-set(
+            'images/medium/hero.webp' type('image/webp') 1x,
+            'images/large/hero.webp' type('image/webp') 2x
+        );
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
