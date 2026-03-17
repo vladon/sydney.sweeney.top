@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A curated fan tribute to Sydney Sweeney — actress, producer, and cultural icon. Explore a premium editorial gallery celebrating her work and style.">
+    <meta name="theme-color" content="#0a0a0b">
+    <meta name="robots" content="index, follow">
     
     <!-- SEO -->
     <title>Sydney Sweeney — Fan Gallery</title>
     <link rel="canonical" href="https://sydney.sweeney.top/">
     
-    <!-- Favicon placeholder -->
-    <!-- <link rel="icon" type="image/svg+xml" href="/favicon.svg"> -->
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
     
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -20,6 +22,7 @@
     <meta property="og:image" content="https://sydney.sweeney.top/images/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Sydney Sweeney Fan Gallery">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -27,13 +30,35 @@
     <meta name="twitter:description" content="A curated fan tribute to Sydney Sweeney — actress, producer, and cultural icon.">
     <meta name="twitter:image" content="https://sydney.sweeney.top/images/og-image.jpg">
     
+    <!-- Preload critical assets -->
+    <link rel="preload" href="images/hero.jpg" as="image" fetchpriority="high">
+    
+    <!-- Preconnect for fonts (if using external fonts in future) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     
-    <!-- Preload critical assets -->
-    <link rel="preload" href="images/hero.jpg" as="image">
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Sydney Sweeney Fan Gallery",
+        "url": "https://sydney.sweeney.top/",
+        "description": "A curated fan tribute to Sydney Sweeney — actress, producer, and cultural icon.",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://sydney.sweeney.top/#gallery",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
 </head>
 <body>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to gallery</a>
+    
     <!-- Hero Section -->
     <header class="hero" id="hero">
         <div class="hero__backdrop" aria-hidden="true"></div>
@@ -49,7 +74,7 @@
         </div>
     </header>
 
-    <main>
+    <main id="main-content">
         <!-- About Section -->
         <section class="about" id="about" aria-labelledby="about-heading">
             <div class="about__container">
@@ -79,40 +104,56 @@
         <section class="gallery" id="gallery" aria-labelledby="gallery-heading">
             <div class="gallery__container">
                 <h2 id="gallery-heading" class="gallery__heading">Featured</h2>
-                <div class="gallery__grid" role="list">
-                    <button class="gallery__item" role="listitem" data-index="0" aria-label="View photo 1">
-                        <img src="images/photo-01.jpg" alt="Sydney Sweeney portrait" loading="lazy" width="400" height="600">
-                        <div class="gallery__item-overlay" aria-hidden="true"></div>
-                    </button>
-                    <button class="gallery__item" role="listitem" data-index="1" aria-label="View photo 2">
-                        <img src="images/photo-02.jpg" alt="Sydney Sweeney editorial" loading="lazy" width="400" height="600">
-                        <div class="gallery__item-overlay" aria-hidden="true"></div>
-                    </button>
-                    <button class="gallery__item" role="listitem" data-index="2" aria-label="View photo 3">
-                        <img src="images/photo-03.jpg" alt="Sydney Sweeney portrait session" loading="lazy" width="400" height="600">
-                        <div class="gallery__item-overlay" aria-hidden="true"></div>
-                    </button>
-                    <button class="gallery__item" role="listitem" data-index="3" aria-label="View photo 4">
-                        <img src="images/photo-04.jpg" alt="Sydney Sweeney photoshoot" loading="lazy" width="400" height="600">
-                        <div class="gallery__item-overlay" aria-hidden="true"></div>
-                    </button>
-                    <button class="gallery__item" role="listitem" data-index="4" aria-label="View photo 5">
-                        <img src="images/photo-05.jpg" alt="Sydney Sweeney fashion editorial" loading="lazy" width="400" height="600">
-                        <div class="gallery__item-overlay" aria-hidden="true"></div>
-                    </button>
-                    <button class="gallery__item" role="listitem" data-index="5" aria-label="View photo 6">
-                        <img src="images/photo-06.jpg" alt="Sydney Sweeney studio portrait" loading="lazy" width="400" height="600">
-                        <div class="gallery__item-overlay" aria-hidden="true"></div>
-                    </button>
-                    <button class="gallery__item" role="listitem" data-index="6" aria-label="View photo 7">
-                        <img src="images/photo-07.jpg" alt="Sydney Sweeney magazine cover" loading="lazy" width="400" height="600">
-                        <div class="gallery__item-overlay" aria-hidden="true"></div>
-                    </button>
-                    <button class="gallery__item" role="listitem" data-index="7" aria-label="View photo 8">
-                        <img src="images/photo-08.jpg" alt="Sydney Sweeney red carpet" loading="lazy" width="400" height="600">
-                        <div class="gallery__item-overlay" aria-hidden="true"></div>
-                    </button>
-                </div>
+                <ul class="gallery__grid" role="list">
+                    <li>
+                        <button class="gallery__item" data-index="0" aria-label="View photo 1 of 8: Sydney Sweeney portrait" type="button">
+                            <img src="images/photo-01.jpg" alt="Sydney Sweeney portrait" loading="eager" decoding="async" width="400" height="600">
+                            <div class="gallery__item-overlay" aria-hidden="true"></div>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="gallery__item" data-index="1" aria-label="View photo 2 of 8: Sydney Sweeney editorial" type="button">
+                            <img src="images/photo-02.jpg" alt="Sydney Sweeney editorial" loading="eager" decoding="async" width="400" height="600">
+                            <div class="gallery__item-overlay" aria-hidden="true"></div>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="gallery__item" data-index="2" aria-label="View photo 3 of 8: Sydney Sweeney portrait session" type="button">
+                            <img src="images/photo-03.jpg" alt="Sydney Sweeney portrait session" loading="lazy" decoding="async" width="400" height="600">
+                            <div class="gallery__item-overlay" aria-hidden="true"></div>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="gallery__item" data-index="3" aria-label="View photo 4 of 8: Sydney Sweeney photoshoot" type="button">
+                            <img src="images/photo-04.jpg" alt="Sydney Sweeney photoshoot" loading="lazy" decoding="async" width="400" height="600">
+                            <div class="gallery__item-overlay" aria-hidden="true"></div>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="gallery__item" data-index="4" aria-label="View photo 5 of 8: Sydney Sweeney fashion editorial" type="button">
+                            <img src="images/photo-05.jpg" alt="Sydney Sweeney fashion editorial" loading="lazy" decoding="async" width="400" height="600">
+                            <div class="gallery__item-overlay" aria-hidden="true"></div>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="gallery__item" data-index="5" aria-label="View photo 6 of 8: Sydney Sweeney studio portrait" type="button">
+                            <img src="images/photo-06.jpg" alt="Sydney Sweeney studio portrait" loading="lazy" decoding="async" width="400" height="600">
+                            <div class="gallery__item-overlay" aria-hidden="true"></div>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="gallery__item" data-index="6" aria-label="View photo 7 of 8: Sydney Sweeney magazine cover" type="button">
+                            <img src="images/photo-07.jpg" alt="Sydney Sweeney magazine cover" loading="lazy" decoding="async" width="400" height="600">
+                            <div class="gallery__item-overlay" aria-hidden="true"></div>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="gallery__item" data-index="7" aria-label="View photo 8 of 8: Sydney Sweeney red carpet" type="button">
+                            <img src="images/photo-08.jpg" alt="Sydney Sweeney red carpet" loading="lazy" decoding="async" width="400" height="600">
+                            <div class="gallery__item-overlay" aria-hidden="true"></div>
+                        </button>
+                    </li>
+                </ul>
             </div>
         </section>
     </main>
@@ -130,27 +171,28 @@
     </footer>
 
     <!-- Lightbox -->
-    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image gallery lightbox" hidden>
-        <button class="lightbox__close" aria-label="Close gallery">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" hidden>
+        <div class="lightbox__visually-hidden" id="lightbox-title">Image gallery lightbox</div>
+        <button class="lightbox__close" aria-label="Close gallery" type="button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
         </button>
-        <button class="lightbox__prev" aria-label="Previous image">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="lightbox__prev" aria-label="Previous image" type="button">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
         </button>
-        <button class="lightbox__next" aria-label="Next image">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="lightbox__next" aria-label="Next image" type="button">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
         </button>
         <div class="lightbox__content">
             <img class="lightbox__image" src="" alt="" id="lightbox-image">
         </div>
-        <div class="lightbox__counter" aria-live="polite">
+        <div class="lightbox__counter" aria-live="polite" aria-atomic="true">
             <span id="lightbox-current">1</span> / <span id="lightbox-total">8</span>
         </div>
     </div>
