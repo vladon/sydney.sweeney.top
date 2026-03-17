@@ -34,7 +34,7 @@
     --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
     --text-2xl: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
     --text-3xl: clamp(2rem, 1.5rem + 2.5vw, 3rem);
-    --text-hero: clamp(3rem, 2rem + 5vw, 5.5rem);
+    --text-hero: clamp(2.5rem, 2rem + 5vw, 5.5rem);
     
     /* Spacing */
     --space-xs: clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem);
@@ -48,6 +48,13 @@
     /* Layout */
     --container-max: 1400px;
     --container-narrow: 900px;
+    
+    /* Z-Index Scale */
+    --z-base: 1;
+    --z-elevated: 10;
+    --z-overlay: 100;
+    --z-modal: 1000;
+    --z-skip-link: 9999;
     
     /* Transitions */
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -65,6 +72,12 @@
     --focus-outline: 2px solid var(--color-accent);
     --focus-outline-offset: 3px;
     --focus-ring: 0 0 0 3px rgba(212, 165, 116, 0.4);
+    
+    /* Safe Area Insets for notched devices */
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
 /* --------------------------------------------------------------------------
@@ -107,6 +120,7 @@ body {
     background-color: var(--color-bg-deep);
     overflow-x: hidden;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 /* Typography */
@@ -168,7 +182,7 @@ ul, li {
     top: -100%;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 9999;
+    z-index: var(--z-skip-link);
     padding: var(--space-sm) var(--space-md);
     background: var(--color-accent);
     color: var(--color-bg-deep);
@@ -259,12 +273,14 @@ button:focus:not(:focus-visible) {
     filter: brightness(0.35) saturate(0.85);
     transform: scale(1.05);
     transition: transform 8s var(--ease-out);
+    will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
     .hero__backdrop {
         transform: scale(1);
         transition: none;
+        will-change: auto;
     }
 }
 
@@ -286,7 +302,7 @@ button:focus:not(:focus-visible) {
 
 .hero__content {
     position: relative;
-    z-index: 1;
+    z-index: var(--z-elevated);
     text-align: center;
     padding: var(--space-lg);
 }
@@ -299,6 +315,10 @@ button:focus:not(:focus-visible) {
     opacity: 0;
     transform: translateY(30px);
     animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+    /* Prevent overflow on small screens */
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .hero__subtitle {
@@ -333,6 +353,13 @@ button:focus:not(:focus-visible) {
     opacity: 0;
     transform: translateY(20px);
     animation: fadeUp 1s var(--ease-out) 0.7s forwards;
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(12px)) {
+    .hero__cta {
+        background: rgba(30, 30, 32, 0.9);
+    }
 }
 
 .hero__cta:hover {
@@ -386,6 +413,9 @@ button:focus:not(:focus-visible) {
 .about {
     padding: var(--space-3xl) var(--space-lg);
     background: var(--color-bg);
+    /* Performance: skip rendering when off-screen */
+    content-visibility: auto;
+    contain-intrinsic-size: 600px;
 }
 
 .about__container {
@@ -456,6 +486,9 @@ button:focus:not(:focus-visible) {
 .gallery {
     padding: var(--space-3xl) var(--space-lg);
     background: var(--color-bg-deep);
+    /* Performance: skip rendering when off-screen */
+    content-visibility: auto;
+    contain-intrinsic-size: 800px;
 }
 
 .gallery__container {
@@ -471,7 +504,7 @@ button:focus:not(:focus-visible) {
 
 .gallery__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: var(--space-sm);
     padding: 0;
 }
@@ -490,12 +523,12 @@ button:focus:not(:focus-visible) {
 
 .gallery__item:hover {
     transform: scale(1.02);
-    z-index: 1;
+    z-index: var(--z-elevated);
 }
 
 .gallery__item:focus-visible {
     outline-offset: 4px;
-    z-index: 2;
+    z-index: var(--z-overlay);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -509,6 +542,7 @@ button:focus:not(:focus-visible) {
     height: 100%;
     object-fit: cover;
     transition: transform var(--duration-slow) var(--ease-out), filter var(--duration-slow) var(--ease-out);
+    will-change: transform, filter;
 }
 
 .gallery__item:hover img {
@@ -517,6 +551,10 @@ button:focus:not(:focus-visible) {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .gallery__item img {
+        will-change: auto;
+    }
+    
     .gallery__item:hover img {
         transform: none;
         filter: none;
@@ -550,6 +588,13 @@ button:focus:not(:focus-visible) {
     opacity: 1;
     transform: translateY(0);
     transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+
+/* No-motion class for reduced motion preference */
+.gallery__item.no-motion {
+    opacity: 1;
+    transform: none;
+    transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -595,7 +640,7 @@ button:focus:not(:focus-visible) {
 .lightbox {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: var(--z-modal);
     background: rgba(0, 0, 0, 0.95);
     display: flex;
     align-items: center;
@@ -603,6 +648,9 @@ button:focus:not(:focus-visible) {
     opacity: 0;
     visibility: hidden;
     transition: opacity var(--duration-base) var(--ease-out), visibility var(--duration-base);
+    /* Safe area support for notched devices */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
 }
 
 .lightbox.active {
@@ -614,8 +662,8 @@ button:focus:not(:focus-visible) {
 
 .lightbox__close {
     position: absolute;
-    top: var(--space-md);
-    right: var(--space-md);
+    top: max(var(--space-md), var(--safe-area-top));
+    right: max(var(--space-md), var(--safe-area-right));
     width: 48px;
     height: 48px;
     display: flex;
@@ -626,7 +674,7 @@ button:focus:not(:focus-visible) {
     border: 1px solid transparent;
     border-radius: 50%;
     transition: all var(--duration-fast) var(--ease-out);
-    z-index: 10;
+    z-index: calc(var(--z-modal) + 1);
 }
 
 .lightbox__close:hover {
@@ -654,7 +702,7 @@ button:focus:not(:focus-visible) {
     border: 1px solid transparent;
     border-radius: 50%;
     transition: all var(--duration-fast) var(--ease-out);
-    z-index: 10;
+    z-index: calc(var(--z-modal) + 1);
 }
 
 .lightbox__prev:hover,
@@ -670,11 +718,11 @@ button:focus:not(:focus-visible) {
 }
 
 .lightbox__prev {
-    left: var(--space-md);
+    left: max(var(--space-md), var(--safe-area-left));
 }
 
 .lightbox__next {
-    right: var(--space-md);
+    right: max(var(--space-md), var(--safe-area-right));
 }
 
 .lightbox__content {
@@ -699,6 +747,18 @@ button:focus:not(:focus-visible) {
     transform: scale(1);
 }
 
+/* Lightbox error state */
+.lightbox__error {
+    color: var(--color-text-secondary);
+    text-align: center;
+    padding: var(--space-xl);
+}
+
+.lightbox__error p {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .lightbox__image {
         opacity: 1;
@@ -713,7 +773,7 @@ button:focus:not(:focus-visible) {
 
 .lightbox__counter {
     position: absolute;
-    bottom: var(--space-md);
+    bottom: max(var(--space-md), var(--safe-area-bottom));
     left: 50%;
     transform: translateX(-50%);
     font-size: var(--text-sm);
@@ -749,11 +809,11 @@ button:focus:not(:focus-visible) {
     }
     
     .lightbox__prev {
-        left: var(--space-sm);
+        left: max(var(--space-sm), var(--safe-area-left));
     }
     
     .lightbox__next {
-        right: var(--space-sm);
+        right: max(var(--space-sm), var(--safe-area-right));
     }
 }
 
@@ -764,6 +824,10 @@ button:focus:not(:focus-visible) {
     
     .gallery__item {
         aspect-ratio: 3 / 4;
+    }
+    
+    .hero__title {
+        font-size: clamp(2rem, 1.5rem + 5vw, 3rem);
     }
 }
 
@@ -795,6 +859,12 @@ button:focus:not(:focus-visible) {
     
     .about__card {
         border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+    
+    .gallery__item img {
+        max-width: 100%;
+        height: auto;
         page-break-inside: avoid;
     }
 }

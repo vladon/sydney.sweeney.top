@@ -2,7 +2,7 @@
  * Sydney Sweeney Fan Gallery
  * Lightbox, keyboard navigation, and reveal animations
  * 
- * @version 1.0.0
+ * @version 1.1.0
  * @license MIT
  */
 
@@ -10,7 +10,7 @@
     'use strict';
 
     // --------------------------------------------------------------------------
-    // Configuration
+    // Configuration - All magic numbers extracted to named constants
     // --------------------------------------------------------------------------
     
     /**
@@ -29,10 +29,19 @@
     ];
 
     /** @type {number} Must match CSS transition duration for lightbox */
-    const LIGHTBOX_CLOSE_DELAY = 250;
+    const LIGHTBOX_CLOSE_DELAY_MS = 250;
 
     /** @type {number} Touch swipe threshold in pixels */
-    const SWIPE_THRESHOLD = 50;
+    const SWIPE_THRESHOLD_PX = 50;
+
+    /** @type {number} Stagger delay between gallery item reveals in ms */
+    const REVEAL_STAGGER_DELAY_MS = 100;
+
+    /** @type {number} Intersection observer threshold (0-1) */
+    const INTERSECTION_THRESHOLD = 0.1;
+
+    /** @type {string} Root margin for intersection observer */
+    const INTERSECTION_ROOT_MARGIN = '50px 0px';
 
     // --------------------------------------------------------------------------
     // DOM Elements (cached for performance)
@@ -46,6 +55,7 @@
         lightboxClose: document.querySelector('.lightbox__close'),
         lightboxPrev: document.querySelector('.lightbox__prev'),
         lightboxNext: document.querySelector('.lightbox__next'),
+        lightboxError: document.querySelector('.lightbox__error'),
         galleryItems: document.querySelectorAll('.gallery__item'),
         yearSpan: document.getElementById('year'),
         heroCTA: document.querySelector('.hero__cta')
@@ -61,7 +71,8 @@
         previousActiveElement: null,
         focusableElements: null,
         touchStartX: 0,
-        touchEndX: 0
+        touchEndX: 0,
+        imageLoadController: null // AbortController for image loading
     };
 
     // --------------------------------------------------------------------------
@@ -215,6 +226,12 @@
         dom.lightbox.classList.remove('active');
         dom.lightbox.setAttribute('aria-hidden', 'true');
         
+        // Abort any pending image load
+        if (state.imageLoadController) {
+            state.imageLoadController.abort();
+            state.imageLoadController = null;
+        }
+        
         setTimeout(() => {
             dom.lightbox.hidden = true;
             state.isInLightbox = false;
@@ -227,7 +244,31 @@
             }
             
             state.previousActiveElement = null;
-        }, LIGHTBOX_CLOSE_DELAY);
+        }, LIGHTBOX_CLOSE_DELAY_MS);
+    }
+
+    /**
+     * Show image loading error state
+     */
+    function showImageError() {
+        if (dom.lightboxImage) {
+            dom.lightboxImage.hidden = true;
+        }
+        if (dom.lightboxError) {
+            dom.lightboxError.hidden = false;
+        }
+    }
+
+    /**
+     * Hide image loading error state
+     */
+    function hideImageError() {
+        if (dom.lightboxImage) {
+            dom.lightboxImage.hidden = false;
+        }
+        if (dom.lightboxError) {
+            dom.lightboxError.hidden = true;
+        }
     }
 
     /**
@@ -239,9 +280,37 @@
         const image = GALLERY_IMAGES[state.currentIndex];
         if (!image) return;
 
-        // Update image source and alt text
-        dom.lightboxImage.src = image.src;
-        dom.lightboxImage.alt = image.alt;
+        // Abort any previous image load
+        if (state.imageLoadController) {
+            state.imageLoadController.abort();
+        }
+        
+        // Create new AbortController for this load
+        state.imageLoadController = new AbortController();
+        
+        // Hide error state when loading new image
+        hideImageError();
+        
+        // Preload image with error handling
+        const tempImg = new Image();
+        tempImg.src = image.src;
+        
+        tempImg.onload = () => {
+            // Check if aborted
+            if (state.imageLoadController && state.imageLoadController.signal.aborted) {
+                return;
+            }
+            dom.lightboxImage.src = image.src;
+            dom.lightboxImage.alt = image.alt;
+        };
+        
+        tempImg.onerror = () => {
+            // Check if aborted
+            if (state.imageLoadController && state.imageLoadController.signal.aborted) {
+                return;
+            }
+            showImageError();
+        };
         
         // Update counter display
         dom.lightboxCurrent.textContent = state.currentIndex + 1;
@@ -296,16 +365,11 @@
      */
     function setupGalleryItems() {
         dom.galleryItems.forEach((item, index) => {
+            // Click handler
             item.addEventListener('click', () => openLightbox(index));
             
-            // Keyboard activation (Enter/Space) is handled natively by buttons
-            // but we add explicit handler for robustness
-            item.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    openLightbox(index);
-                }
-            });
+            // Note: Buttons natively handle Enter and Space for activation
+            // No redundant keydown handler needed - the click event handles all
         });
     }
 
@@ -378,7 +442,7 @@
     function setupGalleryReveal() {
         if (features.reducedMotion || !features.intersectionObserver) {
             // Fallback: show all items immediately (no animation)
-            dom.galleryItems.forEach(item => item.classList.add('revealed'));
+            dom.galleryItems.forEach(item => item.classList.add('no-motion'));
             return;
         }
 
@@ -387,7 +451,7 @@
                 if (entry.isIntersecting) {
                     // Stagger the reveal based on item index
                     const itemIndex = Array.from(dom.galleryItems).indexOf(entry.target);
-                    const delay = itemIndex * 100;
+                    const delay = itemIndex * REVEAL_STAGGER_DELAY_MS;
                     
                     setTimeout(() => {
                         entry.target.classList.add('revealed');
@@ -397,8 +461,8 @@
                 }
             });
         }, {
-            threshold: 0.1,
-            rootMargin: '50px 0px'
+            threshold: INTERSECTION_THRESHOLD,
+            rootMargin: INTERSECTION_ROOT_MARGIN
         });
 
         dom.galleryItems.forEach(item => revealObserver.observe(item));
@@ -443,7 +507,7 @@
     function handleSwipe() {
         const swipeDistance = state.touchEndX - state.touchStartX;
         
-        if (Math.abs(swipeDistance) > SWIPE_THRESHOLD) {
+        if (Math.abs(swipeDistance) > SWIPE_THRESHOLD_PX) {
             if (swipeDistance > 0) {
                 showPrevious();
             } else {
@@ -462,10 +526,16 @@
         features.reducedMotion = e.matches;
         
         // If user enables reduced motion, immediately show all gallery items
+        // Using class toggle instead of inline styles for maintainability
         if (e.matches) {
             dom.galleryItems.forEach(item => {
-                item.style.opacity = '1';
-                item.style.transform = 'none';
+                item.classList.add('no-motion');
+                item.classList.remove('revealed');
+            });
+        } else {
+            // Restore animations
+            dom.galleryItems.forEach(item => {
+                item.classList.remove('no-motion');
             });
         }
     });
