@@ -46,6 +46,19 @@
     <link rel="preload" href="images/medium/hero.webp" as="image" type="image/webp" fetchpriority="high" media="(max-width: 768px)">
     <link rel="preload" href="images/large/hero.webp" as="image" type="image/webp" fetchpriority="high" media="(min-width: 769px)">
     
+    <!-- Preload first gallery images for faster above-fold display -->
+    <link rel="preload" href="images/thumbs/photo-01.webp" as="image" type="image/webp" fetchpriority="high">
+    <link rel="preload" href="images/thumbs/photo-02.webp" as="image" type="image/webp" fetchpriority="high">
+    
+    <!-- Fallback for no-JS: show gallery immediately -->
+    <noscript>
+        <style>
+            .gallery__item { opacity: 1; transform: none; }
+            .lightbox { opacity: 1; visibility: visible; }
+            .lightbox__image { opacity: 1; transform: none; }
+        </style>
+    </noscript>
+    
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     

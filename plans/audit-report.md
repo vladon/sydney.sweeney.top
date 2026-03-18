@@ -1,324 +1,283 @@
-# Frontend Audit Report — Sydney Sweeney Fan Gallery
+# Sydney Sweeney Fan Gallery — Comprehensive Audit Report
 
-**Audit Date:** 2026-03-17  
-**Auditor:** Senior Frontend Engineer Review  
-**Severity Scale:** 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
+**Audit Date:** 2026-03-18  
+**Version:** 1.1.0  
+**Auditor:** Kilo Code (Audit Skill)
+
+---
+
+## Anti-Patterns Verdict
+
+### ✅ PASS — Does NOT look AI-generated
+
+The design successfully avoids AI slop tells:
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Cyan-on-dark palette | ✅ Avoided | Uses warm golden accent (#d4a574) |
+| Purple-to-blue gradients | ✅ Avoided | No gradient text or backgrounds |
+| Glassmorphism everywhere | ✅ Avoided | Minimal backdrop-filter use |
+| Hero metrics layout | ✅ Avoided | Clean editorial hero |
+| Identical card grids with icons | ✅ Avoided | Cards have no icons, varied content |
+| Bounce/elastic easing | ✅ Avoided | Uses smooth `cubic-bezier(0.22, 1, 0.36, 1)` |
+| Inter as only font | ⚠️ Minor | Inter used but paired with Playfair Display |
+| Neon accents on dark | ✅ Avoided | Muted golden accent, not neon |
+
+**Verdict:** Someone would ask "who designed this?" not "which AI made this?"
 
 ---
 
 ## Executive Summary
 
-The codebase demonstrates solid fundamentals with good use of semantic HTML, CSS custom properties, and vanilla JS patterns. However, several issues impact performance, accessibility, and maintainability that should be addressed.
+| Metric | Value |
+|--------|-------|
+| **Total Issues** | 12 |
+| **Critical** | 0 |
+| **High** | 2 |
+| **Medium** | 4 |
+| **Low** | 6 |
+| **Overall Quality** | 8.2/10 |
+
+### Top 3 Critical Issues to Address
+1. **Hard-coded rgba colors** — Inconsistent use of design tokens
+2. **will-change overuse** — Memory implications on gallery images
+3. **Missing about section animations** — Inconsistent motion design
+
+### Recommended Next Steps
+1. Run `/optimize` to fix performance issues
+2. Run `/polish` to address spacing and consistency
+3. Run `/animate` to enhance motion design
 
 ---
 
-## 🔴 CRITICAL ISSUES
+## Detailed Findings
 
-### 1. Missing `defer` on Script Tag
-**File:** [`index.html:210`](index.html:210)  
-**Category:** Performance
-
-The script is loaded without `defer`, blocking HTML parsing.
-
-```html
-<!-- Current -->
-<script src="script.js"></script>
-
-<!-- Should be -->
-<script src="script.js" defer></script>
-```
-
-**Impact:** Delays First Contentful Paint and Time to Interactive.
+### Critical Issues
+*None found* — Core functionality works, no WCAG A violations
 
 ---
 
-### 2. No Image Loading Error Handling
-**File:** [`script.js`](script.js:236)  
-**Category:** Maintainability / UX
+### High-Severity Issues
 
-The lightbox image [`updateLightboxImage()`](script.js:236) function sets `src` without any error handling. If an image fails to load, users see a broken image with no feedback.
-
----
-
-### 3. Duplicate Data Definition
-**Files:** [`index.html:117-164`](index.html:117), [`script.js:20-29`](script.js:20)  
-**Category:** Maintainability
-
-Gallery images are defined in TWO places requiring manual synchronization. This violates DRY principles and is a common source of bugs.
-
----
-
-## 🟠 HIGH PRIORITY ISSUES
-
-### 4. Missing `font-display` Declaration
-**File:** [`styles.css:27-28`](styles.css:27)  
-**Category:** Performance
-
-Fonts reference Google Fonts but no `@font-face` with `font-display: swap` is defined. This causes FOIT (Flash of Invisible Text).
+#### H1: Hard-coded RGBA Colors in Multiple Locations
+- **Location:** [`styles.css`](styles.css:364-385) — `.hero__cta`, `.lightbox__close`, `.lightbox__prev`, `.lightbox__next`
+- **Category:** Theming
+- **Description:** Several components use inline `rgba(255, 255, 255, 0.05)` instead of design tokens
+- **Impact:** Makes theme maintenance harder, inconsistent with design system
+- **Recommendation:** Create `--color-surface-glass` and `--color-surface-glass-hover` tokens
+- **Suggested Command:** `/normalize`
 
 ```css
-/* Current */
---font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
---font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+/* Current (problematic) */
+background: rgba(255, 255, 255, 0.05);
 
-/* Missing: Actual font-face declarations with font-display */
+/* Should be */
+background: var(--color-surface-glass);
 ```
 
-**Note:** Fonts are referenced but never actually loaded via `<link>` tags.
+#### H2: will-change on Non-animating Elements
+- **Location:** [`styles.css:562`](styles.css:562) — `.gallery__item img`
+- **Category:** Performance
+- **Description:** `will-change: transform, filter` applied to all gallery images, not just hovered ones
+- **Impact:** Creates unnecessary GPU memory allocation for 8 images constantly
+- **Recommendation:** Move `will-change` to `:hover` state only, or remove entirely (browsers optimize well)
+- **Suggested Command:** `/optimize`
 
 ---
 
-### 5. Preconnect Without Font Load
-**File:** [`index.html:39-40`](index.html:39)  
-**Category:** Performance
+### Medium-Severity Issues
 
-Preconnect hints to Google Fonts exist, but no font `<link>` tags are present. Wasted preconnect.
+#### M1: Low Contrast on Muted Text
+- **Location:** [`styles.css:17`](styles.css:17) — `--color-text-muted: #6b6b73`
+- **Category:** Accessibility (WCAG AA)
+- **Description:** Muted text color has ~3.8:1 contrast ratio on dark backgrounds
+- **Impact:** Fails WCAG AA for normal text (requires 4.5:1), passes for large text
+- **WCAG:** 1.4.3 Contrast (Minimum)
+- **Recommendation:** Lighten to `#787880` (~4.5:1) or restrict usage to large text only
+- **Suggested Command:** `/harden`
 
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-<link rel="dns-prefetch" href="https://fonts.googleapis.com">
-<!-- Missing: Actual font <link> tags! -->
+#### M2: Missing About Section Reveal Animation
+- **Location:** [`index.html:108-130`](index.html:108) — `.about` section
+- **Category:** Animation
+- **Description:** Gallery has staggered reveal animation, but about section has none
+- **Impact:** Feels static compared to gallery, inconsistent motion design
+- **Recommendation:** Add scroll-triggered reveal for about cards
+- **Suggested Command:** `/animate`
+
+#### M3: Hero Background Zoom Performance
+- **Location:** [`styles.css:282`](styles.css:282) — `.hero__backdrop`
+- **Category:** Performance
+- **Description:** 8-second transform transition on background may cause jank on low-end devices
+- **Impact:** Potential frame drops during page load and hover
+- **Recommendation:** Use `@media (prefers-reduced-motion: reduce)` already implemented, consider shorter duration
+- **Suggested Command:** `/optimize`
+
+#### M4: Inconsistent Card Hover States
+- **Location:** [`styles.css:478-481`](styles.css:478) — `.about__card:hover`
+- **Category:** Polish
+- **Description:** Cards use `translateY(-4px)` but gallery items use `scale(1.02)`
+- **Impact:** Inconsistent interaction feedback across the site
+- **Recommendation:** Standardize hover elevation pattern
+- **Suggested Command:** `/polish`
+
+---
+
+### Low-Severity Issues
+
+#### L1: Inter Font Overuse
+- **Location:** [`styles.css:28`](styles.css:28) — `--font-body`
+- **Category:** Design
+- **Description:** Inter is listed as an overused AI-tell font in the skill guidelines
+- **Impact:** Minor — paired well with Playfair Display, not a strong AI tell
+- **Recommendation:** Consider alternative like DM Sans, Outfit, or Sora for body text
+- **Suggested Command:** `/typeset`
+
+#### L2: No Stagger on Lightbox Controls
+- **Location:** [`styles.css:680-743`](styles.css:680) — Lightbox buttons
+- **Category:** Animation
+- **Description:** Lightbox controls appear simultaneously, not staggered
+- **Impact:** Feels less polished than it could
+- **Recommendation:** Add subtle stagger delay to close, prev, next buttons
+- **Suggested Command:** `/animate`
+
+#### L3: Gallery Grid Gap Inconsistency
+- **Location:** [`styles.css:525`](styles.css:525) — `.gallery__grid`
+- **Category:** Polish
+- **Description:** Desktop uses `--space-sm` gap, mobile uses `--space-xs`
+- **Impact:** Very minor visual inconsistency
+- **Recommendation:** Consider consistent gap or deliberate progression
+- **Suggested Command:** `/arrange`
+
+#### L4: No Loading State for Gallery Images
+- **Location:** [`index.html:139-207`](index.html:139) — Gallery items
+- **Category:** UX
+- **Description:** No skeleton or placeholder while images load
+- **Impact:** Images just appear abruptly on slow connections
+- **Recommendation:** Add subtle background shimmer or blur-up effect
+- **Suggested Command:** `/delight`
+
+#### L5: Footer Lacks Visual Interest
+- **Location:** [`styles.css:631-652`](styles.css:631) — `.footer`
+- **Category:** Design
+- **Description:** Footer is purely functional, no visual hierarchy or interest
+- **Impact:** Ends the page on a flat note
+- **Recommendation:** Add subtle accent or improved typography
+- **Suggested Command:** `/polish`
+
+#### L6: CTA Button Uses Backdrop Filter
+- **Location:** [`styles.css:367`](styles.css:367) — `.hero__cta`
+- **Category:** Performance
+- **Description:** `backdrop-filter: blur(12px)` is GPU-intensive
+- **Impact:** Minor performance hit, battery drain on mobile
+- **Recommendation:** Already has fallback, but consider removing for simpler solid background
+- **Suggested Command:** `/optimize`
+
+---
+
+## Patterns & Systemic Issues
+
+### 1. Inconsistent Hover Patterns
+- Gallery: `scale(1.02)` + brightness filter
+- About cards: `translateY(-4px)` + border color change
+- CTA: `translateY(-2px)` + background change
+- **Recommendation:** Standardize to one primary hover pattern
+
+### 2. Mixed Color Systems
+- Custom properties for most colors ✅
+- Hard-coded `rgba()` for glass surfaces ❌
+- **Recommendation:** Complete the token system
+
+### 3. Animation Inconsistency
+- Hero: Full fade-up animation with stagger
+- Gallery: Scroll-triggered reveal with stagger
+- About: No animation
+- Lightbox: Simple fade, no stagger
+- **Recommendation:** Apply motion design consistently
+
+---
+
+## Positive Findings
+
+### What's Working Well
+
+1. **Excellent Accessibility Foundation**
+   - Skip link implemented
+   - Focus trap in lightbox
+   - `prefers-reduced-motion` respected throughout
+   - High contrast and forced colors mode support
+   - Proper ARIA attributes
+
+2. **Strong Performance Basics**
+   - `content-visibility: auto` on off-screen sections
+   - Responsive images with WebP + srcset
+   - Preload critical assets
+   - Deferred script loading
+
+3. **Clean CSS Architecture**
+   - Well-organized custom properties
+   - Logical file structure
+   - BEM-like naming convention
+   - Good use of CSS clamp() for fluid sizing
+
+4. **Robust JavaScript**
+   - Cached DOM elements
+   - Feature detection
+   - AbortController for image loading
+   - Proper cleanup and state management
+
+5. **Responsive Design**
+   - Mobile-first approach
+   - Safe area insets for notched devices
+   - Appropriate breakpoints
+
+---
+
+## Recommendations by Priority
+
+### Immediate (Do Now)
+1. ✅ No critical blockers
+
+### Short-term (This Sprint)
+1. Replace hard-coded rgba with design tokens
+2. Fix `will-change` performance issue
+3. Standardize hover patterns
+
+### Medium-term (Next Sprint)
+1. Add about section reveal animation
+2. Add lightbox control stagger
+3. Improve muted text contrast
+
+### Long-term (Nice-to-have)
+1. Consider alternative body font
+2. Add image loading states
+3. Enhance footer design
+
+---
+
+## Suggested Commands for Fixes
+
+| Command | Issues Addressed |
+|---------|------------------|
+| `/optimize` | H2, M3, L6 — Performance improvements |
+| `/polish` | M4, L3, L5 — Consistency and refinement |
+| `/animate` | M2, L2 — Motion design enhancements |
+| `/normalize` | H1 — Design token consistency |
+| `/harden` | M1 — Accessibility improvements |
+| `/delight` | L4 — Loading state enhancement |
+
+---
+
+## Next Steps
+
+Run the following commands in order:
+
+```bash
+/audit   # ✅ Complete
+/optimize # Performance fixes
+/polish   # Visual refinement
+/animate  # Motion enhancement
 ```
 
 ---
 
-### 6. No Modern Image Format Support
-**File:** [`index.html:119`](index.html:119)  
-**Category:** Performance
-
-Using only `.jpg` without `<picture>` element for WebP/AVIF fallbacks results in larger payload sizes.
-
----
-
-### 7. Lightbox Counter ARIA Role
-**File:** [`index.html:204`](index.html:204)  
-**Category:** Accessibility
-
-The counter uses `aria-live="polite"` but should have explicit `role="status"` for broader screen reader support.
-
-```html
-<!-- Current -->
-<div class="lightbox__counter" aria-live="polite" aria-atomic="true">
-
-<!-- Better -->
-<div class="lightbox__counter" role="status" aria-live="polite" aria-atomic="true">
-```
-
----
-
-### 8. Missing `aria-describedby` on Lightbox
-**File:** [`index.html:183`](index.html:183)  
-**Category:** Accessibility
-
-The lightbox dialog lacks `aria-describedby` to provide context about the image being viewed.
-
----
-
-### 9. No Safe Area Insets for Notched Devices
-**File:** [`styles.css`](styles.css)  
-**Category:** Responsive
-
-No handling for iOS safe areas (notch, home indicator) which can obscure content on iPhone X+.
-
-```css
-/* Missing */
-@supports (padding: max(0px)) {
-    .lightbox__prev {
-        left: max(var(--space-md), env(safe-area-inset-left));
-    }
-    .lightbox__next {
-        right: max(var(--space-md), env(safe-area-inset-right));
-    }
-}
-```
-
----
-
-### 10. Magic Numbers in JavaScript
-**File:** [`script.js:32-35`](script.js:32)  
-**Category:** Maintainability
-
-Constants like `LIGHTBOX_CLOSE_DELAY = 250` and `SWIPE_THRESHOLD = 50` are defined, but the stagger delay `100` in [`setupGalleryReveal()`](script.js:390) is hardcoded inline.
-
----
-
-## 🟡 MEDIUM PRIORITY ISSUES
-
-### 11. Missing `content-visibility` Optimization
-**File:** [`styles.css`](styles.css)  
-**Category:** Performance
-
-The About section and Gallery items could benefit from `content-visibility: auto` to skip rendering off-screen content.
-
----
-
-### 12. Heavy `backdrop-filter` Usage
-**File:** [`styles.css:330-331`](styles.css:330)  
-**Category:** Performance
-
-`backdrop-filter: blur(12px)` is expensive on mobile GPUs. Should have a fallback and potentially be disabled on low-power devices.
-
----
-
-### 13. No `will-change` Hints for Animations
-**File:** [`styles.css`](styles.css)  
-**Category:** Performance
-
-Animated elements like `.gallery__item img` and `.hero__backdrop` lack `will-change` hints, causing repaints during animation.
-
----
-
-### 14. Gallery Grid: `auto-fill` vs `auto-fit`
-**File:** [`styles.css:474`](styles.css:474)  
-**Category:** Responsive
-
-Using `auto-fill` keeps empty grid tracks. `auto-fit` would collapse them for better centering with fewer items.
-
----
-
-### 15. Missing `og:image:alt`
-**File:** [`index.html`](index.html:23)  
-**Category:** SEO / Accessibility
-
-Open Graph image lacks alt text for social media previews.
-
-```html
-<meta property="og:image:alt" content="Sydney Sweeney Fan Gallery Preview">
-```
-
----
-
-### 16. Missing Twitter Site/Creator
-**File:** [`index.html:29-33`](index.html:29)  
-**Category:** SEO
-
-Twitter cards lack `twitter:site` attribution.
-
----
-
-### 17. Hero Title Overflow Risk
-**File:** [`styles.css:294-302`](styles.css:294)  
-**Category:** Responsive
-
-On very small viewports (<320px), the hero title could overflow. No `min-height` or `overflow` handling.
-
----
-
-### 18. Inline Styles in JavaScript
-**File:** [`script.js:467-469`](script.js:467)  
-**Category:** Maintainability
-
-Reduced motion handler sets inline styles directly instead of toggling a class.
-
-```javascript
-// Current
-item.style.opacity = '1';
-item.style.transform = 'none';
-
-// Better: Toggle a class
-item.classList.add('no-motion');
-```
-
----
-
-### 19. Redundant Keydown Handler on Buttons
-**File:** [`script.js:303-308`](script.js:303)  
-**Category:** Accessibility / Code Quality
-
-Buttons natively handle Enter and Space for activation. The explicit keydown handler is redundant.
-
-```javascript
-// This is redundant - buttons already handle Enter/Space
-item.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openLightbox(index);
-    }
-});
-```
-
----
-
-### 20. No Print Styles for Images
-**File:** [`styles.css:773-800`](styles.css:773)  
-**Category:** Responsive
-
-Print styles hide lightbox but gallery images should have `page-break-inside: avoid` which is present, but images lack explicit print sizing.
-
----
-
-## 🟢 LOW PRIORITY ISSUES
-
-### 21. Meta Description Length
-**File:** [`index.html:6`](index.html:6)  
-**Category:** SEO
-
-Description is ~155 characters which is good, but could be more compelling for CTR.
-
----
-
-### 22. No Sitemap Reference
-**File:** [`index.html`](index.html)  
-**Category:** SEO
-
-Missing `<link rel="sitemap" type="application/xml" href="/sitemap.xml">`.
-
----
-
-### 23. CSS Could Use `@layer`
-**File:** [`styles.css`](styles.css)  
-**Category:** Maintainability
-
-Modern CSS architecture would benefit from `@layer` for cascade management.
-
----
-
-### 24. No CSS Custom Property for Lightbox Z-Index
-**File:** [`styles.css:598`](styles.css:598)  
-**Category:** Maintainability
-
-`z-index: 1000` is hardcoded instead of using a custom property.
-
----
-
-### 25. Skip Link Could Reference Main Content Better
-**File:** [`index.html:69`](index.html:69)  
-**Category:** Accessibility
-
-"Skip to gallery" skips the About section too. "Skip to main content" would be more accurate.
-
----
-
-## Summary Table
-
-| Category | Critical | High | Medium | Low | Total |
-|----------|----------|------|--------|-----|-------|
-| Performance | 1 | 5 | 3 | 0 | 9 |
-| Accessibility | 0 | 2 | 2 | 1 | 5 |
-| Responsive | 0 | 1 | 2 | 0 | 3 |
-| SEO | 0 | 0 | 2 | 2 | 4 |
-| Maintainability | 2 | 1 | 2 | 2 | 7 |
-| **Total** | **3** | **9** | **11** | **5** | **28** |
-
----
-
-## Recommended Fix Order
-
-1. Add `defer` to script tag (immediate performance win)
-2. Either add Google Fonts links OR remove preconnect hints
-3. Add image error handling in lightbox
-4. Add `role="status"` to lightbox counter
-5. Add safe area insets for notched devices
-6. Extract magic numbers to constants
-7. Remove redundant keydown handler
-8. Add `content-visibility: auto` to off-screen sections
-9. Add `og:image:alt` meta tag
-10. Consolidate gallery data source (consider data attributes)
-
----
-
-## Files Requiring Changes
-
-- [`index.html`](index.html) — Script defer, font loading, meta tags, ARIA attributes
-- [`styles.css`](styles.css) — Safe areas, content-visibility, will-change, z-index variable
-- [`script.js`](script.js) — Error handling, magic numbers, redundant code removal
+*Audit complete. Ready to proceed with optimizations.*

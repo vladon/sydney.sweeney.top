@@ -14,7 +14,7 @@
     
     --color-text-primary: #f5f5f4;
     --color-text-secondary: #a1a1a8;
-    --color-text-muted: #6b6b73;
+    --color-text-muted: #787880; /* Improved from #6b6b73 for WCAG AA contrast */
     
     --color-accent: #d4a574;
     --color-accent-hover: #e5b885;
@@ -67,6 +67,11 @@
     --blur-subtle: blur(12px);
     --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.4);
     --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.5);
+    
+    /* Glass surfaces - avoid hard-coded rgba */
+    --color-surface-glass: rgba(255, 255, 255, 0.05);
+    --color-surface-glass-hover: rgba(255, 255, 255, 0.1);
+    --color-surface-glass-fallback: rgba(30, 30, 32, 0.9);
     
     /* Focus */
     --focus-outline: 2px solid var(--color-accent);
@@ -280,7 +285,6 @@ button:focus:not(:focus-visible) {
     filter: brightness(0.35) saturate(0.85);
     transform: scale(1.05);
     transition: transform 8s var(--ease-out);
-    will-change: transform;
 }
 
 /* Mobile: use smaller hero image */
@@ -362,7 +366,7 @@ button:focus:not(:focus-visible) {
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--color-text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--color-surface-glass);
     border: 1px solid var(--color-border);
     border-radius: 0;
     backdrop-filter: var(--blur-subtle);
@@ -376,18 +380,18 @@ button:focus:not(:focus-visible) {
 /* Fallback for browsers without backdrop-filter support */
 @supports not (backdrop-filter: blur(12px)) {
     .hero__cta {
-        background: rgba(30, 30, 32, 0.9);
+        background: var(--color-surface-glass-fallback);
     }
 }
 
 .hero__cta:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-glass-hover);
     border-color: var(--color-border-hover);
     transform: translateY(-2px);
 }
 
 .hero__cta:focus-visible {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-glass-hover);
     border-color: var(--color-accent);
     transform: translateY(-2px);
 }
@@ -479,6 +483,7 @@ button:focus:not(:focus-visible) {
 .about__card:hover {
     border-color: var(--color-border-hover);
     transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -688,7 +693,7 @@ button:focus:not(:focus-visible) {
     align-items: center;
     justify-content: center;
     color: var(--color-text-secondary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--color-surface-glass);
     border: 1px solid transparent;
     border-radius: 50%;
     transition: all var(--duration-fast) var(--ease-out);
@@ -697,12 +702,12 @@ button:focus:not(:focus-visible) {
 
 .lightbox__close:hover {
     color: var(--color-text-primary);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-glass-hover);
 }
 
 .lightbox__close:focus-visible {
     border-color: var(--color-accent);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-glass-hover);
 }
 
 .lightbox__prev,
@@ -716,7 +721,7 @@ button:focus:not(:focus-visible) {
     align-items: center;
     justify-content: center;
     color: var(--color-text-secondary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--color-surface-glass);
     border: 1px solid transparent;
     border-radius: 50%;
     transition: all var(--duration-fast) var(--ease-out);
@@ -726,13 +731,13 @@ button:focus:not(:focus-visible) {
 .lightbox__prev:hover,
 .lightbox__next:hover {
     color: var(--color-text-primary);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-glass-hover);
 }
 
 .lightbox__prev:focus-visible,
 .lightbox__next:focus-visible {
     border-color: var(--color-accent);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-glass-hover);
 }
 
 .lightbox__prev {

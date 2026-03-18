@@ -116,7 +116,15 @@
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
         intersectionObserver: 'IntersectionObserver' in window,
         smoothScroll: 'scrollBehavior' in document.documentElement.style,
-        touch: 'ontouchstart' in window
+        touch: 'ontouchstart' in window,
+        // Cache WebP support check - avoid creating canvas on every image load
+        webp: (function() {
+            try {
+                return document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0;
+            } catch {
+                return false;
+            }
+        })()
     };
 
     // --------------------------------------------------------------------------
@@ -306,19 +314,22 @@
 
     /**
      * Get the appropriate image source based on viewport width and WebP support
+     * Uses cached WebP detection for performance
      * @param {Object} image - Image object from GALLERY_IMAGES
      * @returns {string} - Best image source for current conditions
      */
     function getResponsiveImageSrc(image) {
         const viewportWidth = window.innerWidth;
-        const supportsWebP = document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0;
+        const dpr = window.devicePixelRatio || 1;
+        const effectiveWidth = viewportWidth * dpr;
         
-        // Use WebP if supported and available
-        if (supportsWebP && image.webp) {
-            if (viewportWidth <= 768) {
-                return image.webp.medium; // 800px for mobile
+        // Use WebP if supported and available (using cached detection)
+        if (features.webp && image.webp) {
+            // Account for high-DPI displays
+            if (effectiveWidth <= 768) {
+                return image.webp.medium; // 800px for mobile/standard displays
             } else {
-                return image.webp.large; // 1200px for desktop
+                return image.webp.large; // 1200px for desktop/retina displays
             }
         }
         
